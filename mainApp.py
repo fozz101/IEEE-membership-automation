@@ -4,12 +4,11 @@ Created on Thu Jan 12 15:21:24 2023
 
 @author: fedig
 """
-from tkinter import *
-from tkinter import ttk
+
 import tkinter as tk
 from PIL import Image, ImageTk
 from tkinter import filedialog
-import threading
+
 
 
 #from tkinter import *

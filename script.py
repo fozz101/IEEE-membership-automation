@@ -13,9 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import pandas as pd
+pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
-import openpyxl
-from openpyxl.styles import PatternFill
 import string
 import tkinter as tk
 
@@ -43,7 +42,6 @@ def getStatusIndex(excelFile):
 
 def addStatusColumn(excelFile):
     members = pd.read_excel(excelFile)
-    flag = False
     for i in members.columns:
         if i.upper() =="STATUS":
             return 0
@@ -145,7 +143,8 @@ def proceedToPayment(driver,cardNumber,cardYear,cardMonth,cardOwner):
 def setUpAccountNoPayment(email,password,memberships,memberName,memberID):
     #os.chdir("D:/IEEEMembershipAutomation/")
     service = Service(executable_path="/chromedriver")
-    driver = webdriver.Chrome(service=service)
+    #driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome()
     driver.maximize_window()
     driver.implicitly_wait(10)
     driver.execute_script('document.getElementsByTagName("html")[0].style.scrollBehavior = "auto"')
@@ -356,7 +355,8 @@ def setUpAccountNoPayment(email,password,memberships,memberName,memberID):
 def setUpAccountWithPayment(email,password,memberships,memberName,memberID,cardNumber,cardYear,cardMonth,cardOwner):
     #os.chdir("D:/IEEEMembershipAutomation/")
     service = Service(executable_path="/chromedriver")
-    driver = webdriver.Chrome(service=service)
+    #driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome()
     driver.maximize_window()
     driver.implicitly_wait(10)
     driver.execute_script('document.getElementsByTagName("html")[0].style.scrollBehavior = "auto"')
@@ -568,14 +568,11 @@ def setUpAccountWithPayment(email,password,memberships,memberName,memberID,cardN
 
 
 def mainNoPayment(excelFile,memberName,memberID):
-    nbrOfUndoneAccounts = progressBarLength(excelFile)
+    #nbrOfUndoneAccounts = progressBarLength(excelFile)
     addStatusColumn(excelFile)
-    colLetter=getStatusIndex(excelFile)
+    #colLetter=getStatusIndex(excelFile)
     members = pd.read_excel(excelFile)
-    wb = openpyxl.load_workbook(excelFile)
-    sheet = wb.active    
-    green = "007FFFD4"
-    red = "00C70039"
+
     '''
     setUpAccount(members["EmailAddress"][0],members["Password"][0],members["Memberships"][0])
     
@@ -589,18 +586,16 @@ def mainNoPayment(excelFile,memberName,memberID):
         try:
             if members["Status"][ind]!="Done":
                 setUpAccountNoPayment(members["EmailAddress"][ind],members["Password"][ind],members["Memberships"][ind],memberName,memberID)
-                sheet[colLetter+str(ind+2)].value="Done"
-                sheet[colLetter+str(ind+2)].fill = PatternFill(start_color=green, end_color=green,fill_type = "solid")
-                wb.save(excelFile)
+                members["Status"][ind]="Done"
+                members.to_excel(excelFile)
                 
                 #progressBar["value"] +=int(100/nbrOfUndoneAccounts)
                 
             else:
                 pass
         except Exception :
-            sheet[colLetter+str(ind+2)].value="Undone"
-            sheet[colLetter+str(ind+2)].fill = PatternFill(start_color=red, end_color=red,fill_type = "solid")
-            wb.save(excelFile)
+            members["Status"][ind]="Undone"
+            members.to_excel(excelFile)
     
     tk.messagebox.showinfo("Done", "- Done !")
     print("FINISHED !")
@@ -609,12 +604,9 @@ def mainNoPayment(excelFile,memberName,memberID):
 def mainWithPayment(excelFile,memberName,memberID,cardNumber,cardYear,cardMonth,cardOwner):
     
     addStatusColumn(excelFile)
-    colLetter=getStatusIndex(excelFile)
+    #colLetter=getStatusIndex(excelFile)
     members = pd.read_excel(excelFile)
-    wb = openpyxl.load_workbook(excelFile)
-    sheet = wb.active    
-    green = "007FFFD4"
-    red = "00C70039"
+
     
     #setUpAccount(members["EmailAddress"][0],members["Password"][0],members["Memberships"][0],memberName,memberID,cardNumber,cardYear,cardMonth,cardOwner)
     
@@ -628,15 +620,13 @@ def mainWithPayment(excelFile,memberName,memberID,cardNumber,cardYear,cardMonth,
         try:
             if members["Status"][ind]!="Done":
                 setUpAccountWithPayment(members["EmailAddress"][ind],members["Password"][ind],members["Memberships"][ind],memberName,memberID,cardNumber,cardYear,cardMonth,cardOwner)
-                sheet[colLetter+str(ind+2)].value="Done"
-                sheet[colLetter+str(ind+2)].fill = PatternFill(start_color=green, end_color=green,fill_type = "solid")
-                wb.save(excelFile)
+                members["Status"][ind]="Done"
+                members.to_excel(excelFile)
             else:
                 pass
         except Exception :
-            sheet[colLetter+str(ind+2)].value="Undone"
-            sheet[colLetter+str(ind+2)].fill = PatternFill(start_color=red, end_color=red,fill_type = "solid")
-            wb.save(excelFile)
+            members["Status"][ind]="Undone"
+            members.to_excel(excelFile)
      
     tk.messagebox.showinfo("Done", "- Done !")
     print("FINISHED !")
