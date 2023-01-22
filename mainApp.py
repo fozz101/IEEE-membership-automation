@@ -8,8 +8,8 @@ Created on Thu Jan 12 15:21:24 2023
 import tkinter as tk
 from PIL import Image, ImageTk
 from tkinter import filedialog
-
-
+import os
+import sys
 
 #from tkinter import *
 '''
@@ -231,7 +231,15 @@ def splitExcelWindow():
 
 
 
+config_name = 'myapp.cfg'
 
+# determine if application is a script file or frozen exe
+if getattr(sys, 'frozen', False):
+    application_path = os.path.dirname(sys.executable)
+elif __file__:
+    application_path = os.path.dirname(__file__)
+
+config_path = os.path.join(application_path, config_name)
 
 
 mainWindow = tk.Tk()
@@ -241,7 +249,7 @@ tk.messagebox.showinfo("Information",
 mainWindow.geometry("400x200")
 mainWindow.title("IEEE Membership Automation")
 
-image = Image.open("sb.png")
+image = Image.open(os.getcwd()+"\sb.png")
 imageSB = image.resize((250, 83))
 imgSB = ImageTk.PhotoImage(imageSB)
 
