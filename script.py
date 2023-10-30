@@ -225,7 +225,7 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
         continueBtn.click()
     except:
         print("Address Text not found on the webpage.")
-        continueBtn.click()
+        pass
 
 
     # enajem nsala7ha b try catch student w professional ken catcha error ibadel
