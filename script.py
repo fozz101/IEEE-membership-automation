@@ -218,9 +218,15 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
     cityTextbox.send_keys("El Ghazala")
     zipTextbox.send_keys("2083")
     provinceSelect.select_by_visible_text('Ariana')
+    try:
+        continueBtn.click()
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "addressHeader")))
+        print("Address Text found on the webpage.")
+        continueBtn.click()
+    except:
+        print("Address Text not found on the webpage.")
+        continueBtn.click()
 
-    continueBtn.click()
-    continueBtn.click()
 
     # enajem nsala7ha b try catch student w professional ken catcha error ibadel
     try:
