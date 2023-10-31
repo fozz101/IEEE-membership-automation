@@ -54,6 +54,14 @@ def addStatusColumn(excelFile):
     members["Status"] = "Undone"
     members.to_excel(excelFile)
 
+def addCartColumn(excelFile):
+    members = pd.read_excel(excelFile)
+    for i in members.columns:
+        if i.upper() == "CART NUMBER":
+            return 0
+    members["Cart Number"] = ""
+    members.to_excel(excelFile)
+
 
 def splitExcel(excelFile, nbreOfExcelFiles):
     addStatusColumn(excelFile)
@@ -172,6 +180,7 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
 
     driver.get("https://www.ieee.org/")
 
+
     # cookiesBtn = driver.find_element(By.LINK_TEXT, "Accept & Close")
     # cookiesBtn.click()
 
@@ -209,6 +218,11 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
 
     cartContent = driver.find_element(By.CLASS_NAME, "mc-section").text
     # print(cartContent)
+    cartNumber = driver.find_element(By.XPATH, "//div[3]/div/div/div/div/div/div/div[5]").text.split("cart number")[1]
+    print(cartNumber)
+
+
+
     if addressType.is_selected():
         pass
     else:
@@ -221,10 +235,10 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
     try:
         continueBtn.click()
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "addressHeader")))
-        print("Address Text found on the webpage.")
+        #print("Address Text found on the webpage.")
         continueBtn.click()
     except:
-        print("Address Text not found on the webpage.")
+        #print("Address Text not found on the webpage.")
         pass
 
 
@@ -244,7 +258,8 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
     whyJoin2Checkbox = driver.find_element(By.ID, "CareerOpurtunities")
     whyJoin3Checkbox = driver.find_element(By.ID, "ExpandProfessionalNetwork")
     whyJoin4Checkbox = driver.find_element(By.ID, "ConnectToLocalActivities")
-    continue2Btn = driver.find_element(By.XPATH, value="//div[6]/div/div[2]/div/input")
+    #continue2Btn = driver.find_element(By.XPATH, value="//div[6]/div/div[2]/div/input")
+    continue2Btn = driver.find_element(By.XPATH, value="//div/div[6]/div/div[2]/div/input")
 
     stateSelectElement = driver.find_element(By.ID, "state")
     stateSelect = Select(stateSelectElement)
@@ -276,8 +291,8 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
     uniFilterTextbox = driver.find_element(By.ID, "universityFilter")
     uniFilterTextbox.send_keys("esprit")
 
-    espritLinktext = driver.find_element(By.LINK_TEXT,
-                                         "Private Higher School of Engineering and Technology (ESPRIT) (ESPRIT)")
+    #espritLinktext = driver.find_element(By.LINK_TEXT,"Private Higher School of Engineering and Technology (ESPRIT) (ESPRIT)")
+    espritLinktext = driver.find_element(By.LINK_TEXT,"ESPRIT")
     espritLinktext.click()
     undergradRadio.click()
     directoryCheckbox.click()
@@ -320,10 +335,19 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
 
     # 96246048
 
-    continue2Btn.click()
+    try:
+        continue2Btn.click()
+    except:
+        pass
+
     time.sleep(1)
-    cookiesBtn = driver.find_element(By.LINK_TEXT, "Accept & Close")
-    cookiesBtn.click()
+
+    try:
+        cookiesBtn = driver.find_element(By.LINK_TEXT, "Accept & Close")
+        cookiesBtn.click()
+    except:
+        pass
+
     try:
         if "Computer" not in cartContent:
             checkMembership("CS", memberships, driver,
@@ -362,7 +386,11 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
     time.sleep(2)
     saveInvoice(driver)
 
+    return cartNumber
     driver.quit()
+
+
+
 
 
 def setUpAccountWithPayment(email, password, memberships, memberName, memberID, cardNumber, cardYear, cardMonth,
@@ -564,15 +592,16 @@ def mainNoPayment(excelFile, memberName, memberID):
     # nbrOfUndoneAccounts = progressBarLength(excelFile)
     addStatusColumn(excelFile)
     # colLetter=getStatusIndex(excelFile)
+    addCartColumn(excelFile)
     members = pd.read_excel(excelFile)
 
 
     for ind in members.index:
         try:
             if members["Status"][ind] != "Done":
-                setUpAccountNoPayment(members["EmailAddress"][ind], members["Password"][ind],
+                cartNumber = setUpAccountNoPayment(members["EmailAddress"][ind], members["Password"][ind],
                                       members["Memberships"][ind], memberName, memberID)
-
+                members["Cart Number"][ind] = cartNumber
                 members["Status"][ind] = "Done"
                 members.to_excel(excelFile)
 
