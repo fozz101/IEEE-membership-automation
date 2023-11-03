@@ -16,12 +16,12 @@ from selenium.webdriver.support import expected_conditions as EC, wait
 import time
 import pandas as pd
 import json
-
-
 pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
 import string
 import tkinter as tk
+from pathlib import Path
+import os
 
 
 def progressBarLength(excelFile):
@@ -62,6 +62,16 @@ def addCartColumn(excelFile):
     members["Cart Number"] = ""
     members.to_excel(excelFile)
 
+def addAmountColumn(excelFile):
+    members = pd.read_excel(excelFile)
+    for i in members.columns:
+        if i.upper() == "AMOUNT(USD)":
+            return 0
+    members["Amount(USD)"] = ""
+    members.to_excel(excelFile)
+
+
+
 
 def splitExcel(excelFile, nbreOfExcelFiles):
     addStatusColumn(excelFile)
@@ -101,10 +111,28 @@ def checkMembership(membership, memberships, driver, url):
             pass
 
 
-def saveInvoice(driver):
+def saveInvoice(driver,email):
     driver.get("https://www.ieee.org/cart/publish/viewPaymentByMail.html")
     driver.execute_script('window.print();')
     time.sleep(2)
+    downloads_path = str(Path.home() / "Downloads")
+    new_download_directory = os.getcwd() + "\\invoices"
+    try:
+        os.mkdir(new_download_directory)
+    except OSError as error:
+        pass
+        #print(error)
+
+    try:
+        os.rename(downloads_path + "\\viewPaymentByMail.html.pdf", new_download_directory + "\\"+email+".pdf")
+    except FileExistsError:
+        print("Overriding existing file ...")
+        os.remove(new_download_directory + "\\"+email+".pdf")
+        os.rename(downloads_path + "\\viewPaymentByMail.html.pdf", new_download_directory + "\\"+email+".pdf")
+
+
+
+
 
 
 
@@ -384,9 +412,17 @@ def setUpAccountNoPayment(email, password, memberships, memberName, memberID):
         print("Exception Error !")
 
     time.sleep(2)
-    saveInvoice(driver)
 
-    return cartNumber
+
+    if(driver.current_url != "https://www.ieee.org/membership-catalog/index.html?N=0"):
+        driver.get("https://www.ieee.org/membership-catalog/index.html?N=0")
+        amount = driver.find_element(By.CLASS_NAME, "mc-checkout").text.split("*")[1]
+    else:
+        amount = driver.find_element(By.CLASS_NAME, "mc-checkout").text.split("*")[1]
+    #print(amount)
+    saveInvoice(driver, email)
+
+    return cartNumber, amount
     driver.quit()
 
 
@@ -593,15 +629,17 @@ def mainNoPayment(excelFile, memberName, memberID):
     addStatusColumn(excelFile)
     # colLetter=getStatusIndex(excelFile)
     addCartColumn(excelFile)
+    addAmountColumn(excelFile)
     members = pd.read_excel(excelFile)
 
 
     for ind in members.index:
         try:
             if members["Status"][ind] != "Done":
-                cartNumber = setUpAccountNoPayment(members["EmailAddress"][ind], members["Password"][ind],
+                cartNumber, amount = setUpAccountNoPayment(members["EmailAddress"][ind], members["Password"][ind],
                                       members["Memberships"][ind], memberName, memberID)
                 members["Cart Number"][ind] = cartNumber
+                members["Amount(USD)"][ind] = amount
                 members["Status"][ind] = "Done"
                 members.to_excel(excelFile)
 
